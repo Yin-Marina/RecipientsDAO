@@ -1,0 +1,233 @@
+
+package dataaccesslayer;
+
+import java.util.List;
+import transferobjects.RecipientDTO;
+import java.util.ArrayList;
+import java.sql.PreparedStatement;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+
+/**
+ * <p>
+ * This is the RecipientsDaoImpl class for CST8288-Object Oriented Programming with design patterns(Java) Lab 2.
+ * </p>
+ * <p>
+ * This program demonstrate the DAO pattern used to manipulate the Recipients table in Ontario database.
+ * </p>
+ * 
+ * <pre>
+ * Class: CST8288 - Lab Section: 013
+ * </pre>
+ * 
+ * <pre>
+ * Lab Professor: Siju Philip
+ * </pre>
+ * 
+ * <pre>
+ * Date: Feb. 10, 2023
+ * </pre>
+ * 
+ * @author Mutao Yin
+ * @version 1.0
+ * 
+ * <p>
+ * This class is the RecipientsDaoImpl that implement ReceptientsDao interface 
+ * and provide concrete implementations based on the business rules.
+ * </p>
+ */
+
+
+public class RecipientsDaoImpl implements RecipientsDao{
+        
+        /**
+         * This method returns an arraylist of Recepients object based on the reading from database.
+         * @return an arraylist of Recepients based on the information within the table recepients.
+         */
+	@Override
+	public List<RecipientDTO> getAllRecipients() {
+		Connection con = null;
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		ArrayList<RecipientDTO> recipients = null;
+		try{
+			DataSource ds = new DataSource();
+			con = ds.createConnection();
+			pstmt = con.prepareStatement(
+					"SELECT AwardID, Name, Year, City, Category FROM Recipients ORDER BY AwardID");
+			rs = pstmt.executeQuery();
+			recipients = new ArrayList<RecipientDTO>();
+			while(rs.next()){
+				RecipientDTO recipient = new RecipientDTO();
+				recipient.setAwardID(rs.getInt("AwardID"));
+				recipient.setName(rs.getString("Name"));
+				recipient.setYear(rs.getInt("Year"));
+                                recipient.setCity(rs.getString("City"));
+                                recipient.setCategory(rs.getString("Category"));
+				recipients.add(recipient);
+			}
+		}
+		catch(SQLException e){
+			e.printStackTrace();
+		} catch (ClassNotFoundException ex) {
+                Logger.getLogger(RecipientsDaoImpl.class.getName()).log(Level.SEVERE, null, ex);
+            }
+		finally{
+			try{ if(rs != null){ rs.close(); } }
+			catch(SQLException ex){System.out.println(ex.getMessage());}
+			try{ if(pstmt != null){ pstmt.close(); }}
+			catch(SQLException ex){System.out.println(ex.getMessage());}
+			try{ if(con != null){ con.close(); }}
+			catch(SQLException ex){System.out.println(ex.getMessage());}
+		}
+		return recipients;
+	}
+        
+        /**
+         * This method takes the awardID and search for the exact row within the reception table,
+         * and returns the information wrapped in a recipientDTO object.
+         * @param awardID This is the primary key within the table and is passed in here to search for a recipient accordingly.
+         * @return the row with the awardID passed in wrapped in a recipientDTO object.
+         */
+	@Override
+	public RecipientDTO getRecipientByAwardId(Integer awardID) {
+		Connection con = null;
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		RecipientDTO recipient = null;
+		try{
+			DataSource ds = new DataSource();
+			con = ds.createConnection();
+			pstmt = con.prepareStatement(
+					"SELECT AwardID, Name, Year, City, Category FROM Recipients WHERE AwardID = ?");
+			pstmt.setInt(1, awardID.intValue());
+			rs = pstmt.executeQuery();
+			while(rs.next()){
+				recipient = new RecipientDTO();
+				recipient.setAwardID(rs.getInt("AwardID"));
+				recipient.setName(rs.getString("Name"));
+				recipient.setYear(rs.getInt("Year"));
+                                recipient.setCity(rs.getString("City"));
+                                recipient.setCategory(rs.getString("Category"));
+			}
+		}
+		catch(SQLException e){
+			e.printStackTrace();
+		} catch (ClassNotFoundException ex) {
+                Logger.getLogger(RecipientsDaoImpl.class.getName()).log(Level.SEVERE, null, ex);
+            }
+		finally{
+			try{ if(rs != null){ rs.close(); } }
+			catch(SQLException ex){System.out.println(ex.getMessage());}
+			try{ if(pstmt != null){ pstmt.close(); }}
+			catch(SQLException ex){System.out.println(ex.getMessage());}
+			try{ if(con != null){ con.close(); }}
+			catch(SQLException ex){System.out.println(ex.getMessage());}
+		}
+		return recipient;
+	}
+        
+        /**
+         * This method takes a RecipientDTO as a parameter, extract the data and add it as a new row to the end of the recipient table.
+         * @param recipient This parameter is a RecipientDTO object and is going to be added to the end of the table.
+         */
+	@Override
+	public void addRecipient(RecipientDTO recipient) {
+		Connection con = null;
+		PreparedStatement pstmt = null;
+		try{
+			DataSource ds = new DataSource();
+			con = ds.createConnection();
+			// do not insert AwardID, it is generated by Database
+			pstmt = con.prepareStatement(
+					"INSERT INTO Recipients (Name, Year, City, Category) " +
+			        "VALUES(?, ?, ?, ? );");
+			pstmt.setString(1, recipient.getName());
+			pstmt.setString(2, recipient.getYear().toString());
+                        pstmt.setString(3, recipient.getCity());
+                        pstmt.setString(4, recipient.getCategory());
+			pstmt.executeUpdate();
+		}
+		catch(SQLException e){
+			e.printStackTrace();
+		} catch (ClassNotFoundException ex) {
+                Logger.getLogger(RecipientsDaoImpl.class.getName()).log(Level.SEVERE, null, ex);
+            }
+		finally{
+			try{ if(pstmt != null){ pstmt.close(); }}
+			catch(SQLException ex){System.out.println(ex.getMessage());}
+			try{ if(con != null){ con.close(); }}
+			catch(SQLException ex){System.out.println(ex.getMessage());}
+		}
+	}
+        
+        /**
+         * This method will update one row within the table according to the information provided with in the RecipientDTO provided. 
+         * @param recipient Take the RecipientDTO that needs to be updated.
+         */
+	@Override
+	public void updateRecipient(RecipientDTO recipient) {
+			Connection con = null;
+			PreparedStatement pstmt = null;
+			try{
+				DataSource ds = new DataSource();
+				con = ds.createConnection();
+				pstmt = con.prepareStatement(
+						"UPDATE Recipients SET Name = ?, " + 
+				        "Year = ? ," + "City = ? ,"+ "Category = ? "+
+                                                "WHERE AwardID = ?");
+				pstmt.setString(1, recipient.getName());
+				pstmt.setString(2, recipient.getYear().toString());
+                                pstmt.setString(3, recipient.getCity());
+                                pstmt.setString(4, recipient.getCategory());
+				pstmt.setInt(5, recipient.getAwardID().intValue());
+				pstmt.executeUpdate();
+			}
+			catch(SQLException e){
+				e.printStackTrace();
+			} catch (ClassNotFoundException ex) {
+                Logger.getLogger(RecipientsDaoImpl.class.getName()).log(Level.SEVERE, null, ex);
+            }
+			finally{
+				try{ if(pstmt != null){ pstmt.close(); }}
+				catch(SQLException ex){System.out.println(ex.getMessage());}
+				try{ if(con != null){ con.close(); }}
+				catch(SQLException ex){System.out.println(ex.getMessage());}
+			}
+	}
+        
+
+        /**
+         * This method will delete one row within the table according to the 
+         * information provided with in the RecipientDTO parameter.
+         * @param recipient This parameter will provide information for the method to search and delete the row accordingly.
+         */
+	@Override
+	public void deleteRecipient(RecipientDTO recipient) {
+		Connection con = null;
+		PreparedStatement pstmt = null;
+		try{
+			DataSource ds = new DataSource();
+			con = ds.createConnection();
+			pstmt = con.prepareStatement(
+					"DELETE FROM Recipients WHERE AwardID = ?");	
+			pstmt.setInt(1, recipient.getAwardID().intValue());
+			pstmt.executeUpdate();
+		}
+		catch(SQLException e){
+			e.printStackTrace();
+		} catch (ClassNotFoundException ex) {
+                Logger.getLogger(RecipientsDaoImpl.class.getName()).log(Level.SEVERE, null, ex);
+            }
+		finally{
+			try{ if(pstmt != null){ pstmt.close(); }}
+			catch(SQLException ex){System.out.println(ex.getMessage());}
+			try{ if(con != null){ con.close(); }}
+			catch(SQLException ex){System.out.println(ex.getMessage());}
+		}
+	}
+}
